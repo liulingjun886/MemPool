@@ -9,5 +9,5 @@ PageCache 类 单例类， 向操作系统申请内存块，并供CentralCache�
 
 该项目在centos6.10编译通过，可正常运行。
 因项目测试使用单线程，故不加锁。
-如所涉及多线程开发需在 CentralCache 和 PageCache 类中加锁，加锁位置源文件中亦有标识。
+如所涉及多线程开发需在 CentralCache 和 PageCache 类中加锁，加锁位置源文件中亦有标识，谨防递归锁。
 如果需要移到其他平台，请在PageCache.cpp中系统内存映射改成相应平台的内存映射函数。有需要的朋友请自己实现
