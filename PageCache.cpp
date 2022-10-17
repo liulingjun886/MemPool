@@ -7,17 +7,11 @@ PageCache PageCache::_Inst;
 
 PageCache::PageCache()
 {
-	
+	AddNewSpans();
 }
 
 PageCache::~PageCache()
 {
-	while(!_pagelist[0].Empty())
-	{
-		Span* pSpan = _pagelist[0].Pop();
-		delete pSpan;
-	}
-	
 	for(int i = 1; i < NPAGES; ++i)
 	{
 		SpanList& spanlist = _pagelist[i];		
@@ -25,9 +19,29 @@ PageCache::~PageCache()
 		{
 			Span* pSpan = spanlist.Pop();
 			munmap(pSpan->_objlist,pSpan->_npage*PAGESIZE);
-			delete pSpan;
 		}
 	}
+
+	while(_spanpoolhead._next)
+	{
+		SpanPool* next = _spanpoolhead._next;
+		_spanpoolhead._next = next->_next;
+		munmap(next,128*PAGESIZE);
+	}	
+}
+
+//直接生成span的内存池
+bool PageCache::AddNewSpans()
+{
+	SpanPool* ptr = (SpanPool*)mmap(NULL, 128*PAGESIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS /*MAP_HUGETLB*/, -1, 0);
+	if (ptr == NULL)
+	{
+		return false;
+	}
+	ptr->_next = _spanpoolhead._next;
+	ptr->_used = 0;
+	_spanpoolhead._next = ptr;
+	return true;
 }
 
 /*
@@ -44,8 +58,22 @@ Span* PageCache::AddSpan()
 {
 	if(!_pagelist[0].Empty())
 		return _pagelist[0].Pop();
-	
-	return new Span;
+	else
+	{
+		SpanPool* spanpool = _spanpoolhead._next;
+		char* newspanpool = (char*)&spanpool->_span[spanpool->_used + 1];
+		if((((PageID)newspanpool-1) >> 12) < (((PageID)spanpool >> 12)+ 128))
+		{
+			Span* newSpan = &spanpool->_span[spanpool->_used];
+			spanpool->_used += 1;
+			return newSpan;
+		}
+		else
+		{
+			AddNewSpans();
+			return AddSpan();
+		}
+	}
 }
 
 void PageCache::DelSpan(Span* span)

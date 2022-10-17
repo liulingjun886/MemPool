@@ -224,6 +224,21 @@ struct Span
 	}
 };
 
+
+struct SpanPool
+{
+	SpanPool* _next;
+	uint32 _used;
+	Span _span[0];
+
+	SpanPool()
+	{
+		_next = NULL;
+		_used = 0;
+	}
+};
+
+
 //CentralCache的数据结构
 class SpanList
 {

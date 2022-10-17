@@ -25,9 +25,11 @@ private:
 	PageCache& operator=(const PageCache&);
 	Span* AddSpan();
 	void DelSpan(Span* span);
+	bool AddNewSpans();
 private:
 	SpanList _pagelist[NPAGES];
 	CRadixTree<Span> _id_span_map;
+	SpanPool _spanpoolhead;
 	static PageCache _Inst;
 };
 
