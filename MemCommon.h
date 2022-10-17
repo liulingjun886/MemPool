@@ -9,7 +9,7 @@
 //表示自由链表中可以给出的最大的内存块的大小为64KB
 #define MAXBYTES 65536
 
-//表示PageCache中页种类的数量 即最大为128页 0页处浪费
+//表示PageCache中页种类的数量 即最大为128页 0页处存放span结构
 #define NPAGES 129
 
 //一页内存的大小
