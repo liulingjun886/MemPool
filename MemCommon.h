@@ -228,13 +228,13 @@ struct Span
 struct SpanPool
 {
 	SpanPool* _next;
-	uint32 _used;
+	uint32 _unused;
 	Span _span[0];
 
 	SpanPool()
 	{
 		_next = NULL;
-		_used = 0;
+		_unused = 0;
 	}
 };
 

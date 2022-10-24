@@ -1,6 +1,7 @@
 #include "PageCache.h"
 #include <sys/mman.h>
 
+#define MAX_SPAN_NUM 64
 
 //实例化单例对象
 PageCache PageCache::_Inst;
@@ -26,21 +27,21 @@ PageCache::~PageCache()
 	{
 		SpanPool* next = _spanpoolhead._next;
 		_spanpoolhead._next = next->_next;
-		munmap(next,128*PAGESIZE);
+		munmap(next,MAX_SPAN_NUM*PAGESIZE);
 	}	
 }
 
 //直接生成span的内存池
 bool PageCache::AddNewSpans()
 {
-	SpanPool* ptr = (SpanPool*)mmap(NULL, 128*PAGESIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS /*MAP_HUGETLB*/, -1, 0);
+	SpanPool* ptr = (SpanPool*)mmap(NULL, MAX_SPAN_NUM*PAGESIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS /*MAP_HUGETLB*/, -1, 0);
 	if (ptr == NULL)
 	{
 		return false;
 	}
 	ptr->_next = _spanpoolhead._next;
-	ptr->_used = 0;
 	_spanpoolhead._next = ptr;
+	ptr->_unused = ((MAX_SPAN_NUM*PAGESIZE)-sizeof(SpanPool))/sizeof(Span);
 	return true;
 }
 
@@ -61,18 +62,12 @@ Span* PageCache::AddSpan()
 	else
 	{
 		SpanPool* spanpool = _spanpoolhead._next;
-		char* newspanpool = (char*)&spanpool->_span[spanpool->_used + 1];
-		if((((PageID)newspanpool-1) >> 12) < (((PageID)spanpool >> 12)+ 128))
-		{
-			Span* newSpan = &spanpool->_span[spanpool->_used];
-			spanpool->_used += 1;
-			return newSpan;
-		}
-		else
+		if(0 == spanpool->_unused)
 		{
 			AddNewSpans();
-			return AddSpan();
+			spanpool = _spanpoolhead._next;
 		}
+		return (char*)&spanpool->_span[--spanpool->_unused];
 	}
 }
 
