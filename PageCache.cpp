@@ -67,7 +67,7 @@ Span* PageCache::AddSpan()
 			AddNewSpans();
 			spanpool = _spanpoolhead._next;
 		}
-		return (char*)&spanpool->_span[--spanpool->_unused];
+		return &spanpool->_span[--spanpool->_unused];
 	}
 }
 

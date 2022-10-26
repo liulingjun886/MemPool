@@ -2,11 +2,11 @@
 #include "ThreadCache.h"
 #include <time.h>
 #include <stdlib.h>
-#define MAX 1024
+#define MAX 5
+static ThreadCache memPool;
 
 int main()
 {
-	ThreadCache memPool;
 	void* ptr[MAX] = {0};
 	srand(time(NULL));
 	for(int i = 0; i < MAX; i++)
@@ -15,8 +15,9 @@ int main()
 	}
 	
 	printf("===========================\n");
-	for(int i = 0; i < MAX; i++)
+	
+	/*for(int i = 0; i < MAX; i++)
 	{
 		memPool.Deallocate(ptr[i]);
-	}
+	}*/
 }
